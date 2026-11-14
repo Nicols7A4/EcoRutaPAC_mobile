@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">EcoRutaPAC</string>
+    <string name="title_login">Iniciar Sesión</string>
+    <string name="sub_title_login">Gestión y Trazabilidad de Residuos Sólidos</string>
+    <string name="hint_email">Correo institucional</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_login">Ingresar</string>
+    <string name="err_empty_credentials">Ingrese correo y contraseña</string>
+    <string name="err_network">Error de conexión. Operando en modo local</string>
+
+    <!-- Menu / Tabs -->
+    <string name="menu_rutas">Rutas</string>
+    <string name="menu_supervision">Supervisión</string>
+    <string name="menu_mapa">Mapa</string>
+    <string name="menu_perfil">Perfil</string>
+    <string name="logout">Cerrar Sesión</string>
+
+    <!-- Estados -->
+    <string name="estado_programada">PROGRAMADA</string>
+    <string name="estado_en_curso">EN CURSO</string>
+    <string name="estado_finalizada">FINALIZADA</string>
+    <string name="estado_observada">OBSERVADA</string>
+    <string name="estado_pendiente">PENDIENTE</string>
+    <string name="estado_atendido">ATENDIDO</string>
+
+    <!-- Retos -->
+    <string name="offline_banner_text">Modo Offline Activo</string>
+    <string name="sync_button_text">Sincronizar ahora</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
