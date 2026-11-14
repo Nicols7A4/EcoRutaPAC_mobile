@@ -1,0 +1,92 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.google.services)
+}
+
+android {
+    namespace 'pe.edu.usat.ecorutapac'
+    compileSdk {
+        version = release(37)
+    }
+
+    defaultConfig {
+        applicationId "pe.edu.usat.ecorutapac"
+        minSdk 24
+        targetSdk 37
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            optimization {
+                enable false
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation libs.activity.ktx
+    implementation libs.appcompat
+    implementation libs.constraintlayout
+    implementation libs.material
+
+    //Importar la librería de Lottie
+    implementation libs.lottie
+
+    //Navigation component
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+
+    //SwipeRefreshLayout
+    implementation libs.swiperefreshlayout
+
+    //Retrofit 2
+    implementation libs.retrofit
+    implementation libs.converter.gson
+
+    //Circleimageview
+    implementation libs.circleimageview
+
+    //Room
+    implementation libs.room.runtime
+    annotationProcessor libs.room.compiler
+
+
+
+    // fcm
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-messaging-directboot'
+
+    // mpas
+    implementation 'com.google.android.libraries.places:places:6.0.2'
+    implementation 'com.google.android.gms:play-services-maps:20.1.0'
+
+    //Generación de QR
+    implementation "com.google.zxing:core:3.5.3"
+
+    //Lectura de QR
+    def camerax_version = "1.6.2"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+    implementation "com.google.mlkit:barcode-scanning:17.3.0"
+
+
+    testImplementation libs.junit
+    androidTestImplementation libs.espresso.core
+    androidTestImplementation libs.ext.junit
+}

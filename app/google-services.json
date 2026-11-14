@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1080581238957",
+    "project_id": "ecoruta-pac-fireb",
+    "storage_bucket": "ecoruta-pac-fireb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1080581238957:android:9189ed28594b8a3ae85624",
+        "android_client_info": {
+          "package_name": "pe.edu.usat.ecorutapac"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnIal4Qf4wmK259sn9OwDe-8CWx7LHGX0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
