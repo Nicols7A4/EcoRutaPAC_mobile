@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/card_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvTipo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Acceso bloqueado"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:textColor="@color/status_observada" />
+
+            <TextView
+                android:id="@+id/tvEstadoIncidencia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="REPORTADA"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@color/status_observada"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvPunto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Punto: Cafetería Central"
+            android:textSize="13sp"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvDescripcion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Vehículo mal estacionado obstruye el ingreso al contenedor."
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary" />
+
+        <!-- Miniatura de foto de evidencia -->
+        <ImageView
+            android:id="@+id/ivFotoMiniatura"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="8dp"
+            android:scaleType="centerCrop"
+            android:background="@color/divider"
+            android:visibility="gone"
+            android:contentDescription="Miniatura de foto" />
+
+        <TextView
+            android:id="@+id/tvAutorFecha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Reportado por: Carlos Pérez | 2026-11-05 08:45"
+            android:textSize="11sp"
+            android:textColor="@color/text_hint" />
+
+        <!-- Botón para Supervisor/Fiscalizador -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCambiarEstadoIncidencia"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Marcar como Resuelta"
+            android:textSize="11sp"
+            android:visibility="gone"
+            style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
