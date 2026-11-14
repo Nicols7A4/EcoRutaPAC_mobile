@@ -30,6 +30,7 @@ import pe.edu.usat.ecorutapac.data.remote.RetrofitClient;
 import pe.edu.usat.ecorutapac.data.remote.api.ApiService;
 import pe.edu.usat.ecorutapac.data.remote.dto.request.EstadoIncidenciaRequest;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.ApiResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.IncidenciasResponse;
 import pe.edu.usat.ecorutapac.sync.SyncManager;
 import pe.edu.usat.ecorutapac.util.NetworkUtils;
 import pe.edu.usat.ecorutapac.util.SessionManager;
@@ -51,7 +52,6 @@ public class IncidenciaRepository {
     }
 
     private final Context context;
-    private final ApiService apiService;
     private final IncidenciaDao incidenciaDao;
     private final PuntoRutaDao puntoRutaDao;
     private final OperacionPendienteDao operacionDao;
@@ -61,12 +61,15 @@ public class IncidenciaRepository {
 
     public IncidenciaRepository(Context context) {
         this.context = context.getApplicationContext();
-        this.apiService = RetrofitClient.getService(this.context);
         EcoRutaDatabase db = EcoRutaDatabase.getInstance(this.context);
         this.incidenciaDao = db.incidenciaDao();
         this.puntoRutaDao = db.puntoRutaDao();
         this.operacionDao = db.operacionPendienteDao();
         this.sessionManager = new SessionManager(this.context);
+    }
+
+    private ApiService getApiService() {
+        return RetrofitClient.getService(context);
     }
 
     public void reportarIncidencia(int idRuta, int idRutaPunto, String nombrePunto, String tipo, String descripcion, File fotoComprimida, ReportarCallback callback) {
@@ -100,7 +103,7 @@ public class IncidenciaRepository {
             fotoPart = MultipartBody.Part.createFormData("foto", fotoComprimida.getName(), fileBody);
         }
 
-        apiService.registrarIncidenciaMultipart(idRutaPunto, tipoBody, descBody, fotoPart).enqueue(new Callback<ApiResponse<IncidenciaEntity>>() {
+        getApiService().registrarIncidenciaMultipart(idRutaPunto, tipoBody, descBody, fotoPart).enqueue(new Callback<ApiResponse<IncidenciaEntity>>() {
             @Override
             public void onResponse(Call<ApiResponse<IncidenciaEntity>> call, Response<ApiResponse<IncidenciaEntity>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
@@ -156,11 +159,11 @@ public class IncidenciaRepository {
     }
 
     public void obtenerIncidencias(int idRuta, IncidenciasCallback callback) {
-        apiService.obtenerIncidenciasRuta(idRuta).enqueue(new Callback<ApiResponse<List<IncidenciaEntity>>>() {
+        getApiService().obtenerIncidenciasRuta(idRuta).enqueue(new Callback<ApiResponse<IncidenciasResponse>>() {
             @Override
-            public void onResponse(Call<ApiResponse<List<IncidenciaEntity>>> call, Response<ApiResponse<List<IncidenciaEntity>>> response) {
+            public void onResponse(Call<ApiResponse<IncidenciasResponse>> call, Response<ApiResponse<IncidenciasResponse>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    List<IncidenciaEntity> list = response.body().getData();
+                    List<IncidenciaEntity> list = response.body().getData().getIncidencias();
                     executor.execute(() -> incidenciaDao.insertarTodas(list));
                     callback.onResult(list);
                 } else {
@@ -169,7 +172,7 @@ public class IncidenciaRepository {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<List<IncidenciaEntity>>> call, Throwable t) {
+            public void onFailure(Call<ApiResponse<IncidenciasResponse>> call, Throwable t) {
                 obtenerLocales(idRuta, callback);
             }
         });
@@ -184,7 +187,7 @@ public class IncidenciaRepository {
 
     public void actualizarEstado(int idIncidencia, String estado, String observacion, Callback<ApiResponse<IncidenciaEntity>> callback) {
         EstadoIncidenciaRequest req = new EstadoIncidenciaRequest(estado, observacion);
-        apiService.actualizarEstadoIncidencia(idIncidencia, req).enqueue(new Callback<ApiResponse<IncidenciaEntity>>() {
+        getApiService().actualizarEstadoIncidencia(idIncidencia, req).enqueue(new Callback<ApiResponse<IncidenciaEntity>>() {
             @Override
             public void onResponse(Call<ApiResponse<IncidenciaEntity>> call, Response<ApiResponse<IncidenciaEntity>> response) {
                 if (response.isSuccessful()) {

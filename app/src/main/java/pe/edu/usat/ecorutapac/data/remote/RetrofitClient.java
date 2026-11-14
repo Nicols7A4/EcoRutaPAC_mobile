@@ -20,9 +20,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
 
     private static final String TAG = "RetrofitClient";
-    // 10.0.2.2 es la IP del host accesible desde el emulador de Android Studio.
-    // Para dispositivo físico se puede cambiar a la IP local de la PC (ej. 192.168.1.15).
-    public static String BASE_URL = "http://10.0.2.2:5000/api/";
+    // 127.0.0.1 / localhost con adb reverse tcp:5000 tcp:5000 para dispositivo físico
+    public static String BASE_URL = "http://127.0.0.1:5000/api/";
 
     private static Retrofit retrofit = null;
     private static ApiService apiService = null;

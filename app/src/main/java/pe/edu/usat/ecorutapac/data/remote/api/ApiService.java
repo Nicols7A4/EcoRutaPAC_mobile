@@ -14,10 +14,16 @@ import pe.edu.usat.ecorutapac.data.remote.dto.request.EstadoIncidenciaRequest;
 import pe.edu.usat.ecorutapac.data.remote.dto.request.LoginRequest;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.ApiResponse;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.HistorialRutaItem;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.HistorialRutaResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.IncidenciasResponse;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.LoginResponse;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.OperarioItem;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.OperariosResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.PuntosResponse;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.ResumenSupervisionResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.RutasResponse;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.VehiculoItem;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.VehiculosResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -37,9 +43,12 @@ public interface ApiService {
     @POST("auth/fcm-token")
     Call<ApiResponse<Object>> registrarTokenFcm(@Body DispositivoRequest request);
 
+    @GET("usuario/perfil")
+    Call<ApiResponse<LoginResponse>> obtenerPerfil();
+
     // --- Módulo 2: Rutas ---
     @GET("rutas")
-    Call<ApiResponse<List<RutaEntity>>> obtenerRutas(
+    Call<ApiResponse<RutasResponse>> obtenerRutas(
             @Query("fecha") String fecha,
             @Query("estado") String estado,
             @Query("id_operario") Integer idOperario
@@ -49,7 +58,7 @@ public interface ApiService {
     Call<ApiResponse<RutaEntity>> obtenerDetalleRuta(@Path("id") int idRuta);
 
     @GET("rutas/{id}/puntos")
-    Call<ApiResponse<List<PuntoRutaEntity>>> obtenerPuntosRuta(@Path("id") int idRuta);
+    Call<ApiResponse<PuntosResponse>> obtenerPuntosRuta(@Path("id") int idRuta);
 
     @PUT("rutas/{id}/asignar")
     Call<ApiResponse<RutaEntity>> asignarRuta(@Path("id") int idRuta, @Body AsignarRutaRequest request);
@@ -78,7 +87,7 @@ public interface ApiService {
     );
 
     @GET("rutas/{id}/incidencias")
-    Call<ApiResponse<List<IncidenciaEntity>>> obtenerIncidenciasRuta(@Path("id") int idRuta);
+    Call<ApiResponse<IncidenciasResponse>> obtenerIncidenciasRuta(@Path("id") int idRuta);
 
     @PUT("incidencias/{id}/estado")
     Call<ApiResponse<IncidenciaEntity>> actualizarEstadoIncidencia(
@@ -88,14 +97,14 @@ public interface ApiService {
 
     // --- Supervisión e Historial ---
     @GET("rutas/{id}/historial")
-    Call<ApiResponse<List<HistorialRutaItem>>> obtenerHistorialRuta(@Path("id") int idRuta);
+    Call<ApiResponse<HistorialRutaResponse>> obtenerHistorialRuta(@Path("id") int idRuta);
 
     @GET("supervision/resumen")
     Call<ApiResponse<ResumenSupervisionResponse>> obtenerResumenSupervision(@Query("fecha") String fecha);
 
     @GET("usuarios/operarios")
-    Call<ApiResponse<List<OperarioItem>>> obtenerOperarios();
+    Call<ApiResponse<OperariosResponse>> obtenerOperarios();
 
     @GET("vehiculos")
-    Call<ApiResponse<List<VehiculoItem>>> obtenerVehiculos();
+    Call<ApiResponse<VehiculosResponse>> obtenerVehiculos();
 }

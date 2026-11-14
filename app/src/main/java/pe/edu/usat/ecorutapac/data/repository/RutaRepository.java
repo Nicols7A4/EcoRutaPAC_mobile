@@ -27,6 +27,8 @@ import pe.edu.usat.ecorutapac.data.remote.api.ApiService;
 import pe.edu.usat.ecorutapac.data.remote.dto.request.AsignarRutaRequest;
 import pe.edu.usat.ecorutapac.data.remote.dto.request.AtenderPuntoRequest;
 import pe.edu.usat.ecorutapac.data.remote.dto.response.ApiResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.PuntosResponse;
+import pe.edu.usat.ecorutapac.data.remote.dto.response.RutasResponse;
 import pe.edu.usat.ecorutapac.sync.SyncManager;
 import pe.edu.usat.ecorutapac.util.NetworkUtils;
 import retrofit2.Call;
@@ -47,7 +49,6 @@ public class RutaRepository {
     }
 
     private final Context context;
-    private final ApiService apiService;
     private final RutaDao rutaDao;
     private final PuntoRutaDao puntoRutaDao;
     private final OperacionPendienteDao operacionDao;
@@ -56,17 +57,32 @@ public class RutaRepository {
 
     public RutaRepository(Context context) {
         this.context = context.getApplicationContext();
-        this.apiService = RetrofitClient.getService(this.context);
         EcoRutaDatabase db = EcoRutaDatabase.getInstance(this.context);
         this.rutaDao = db.rutaDao();
         this.puntoRutaDao = db.puntoRutaDao();
         this.operacionDao = db.operacionPendienteDao();
     }
 
+    private ApiService getApiService() {
+        return RetrofitClient.getService(context);
+    }
+
+    private static <T> Callback<T> wrapCallback(Callback<T> callback) {
+        if (callback != null) {
+            return callback;
+        }
+        return new Callback<>() {
+            @Override
+            public void onResponse(Call<T> call, Response<T> response) {}
+            @Override
+            public void onFailure(Call<T> call, Throwable t) {}
+        };
+    }
+
     // --- RUTAS: REMOTO & LOCAL ---
 
-    public void obtenerRutasRemotas(String fecha, String estado, Integer idOperario, Callback<ApiResponse<List<RutaEntity>>> callback) {
-        apiService.obtenerRutas(fecha, estado, idOperario).enqueue(callback);
+    public void obtenerRutasRemotas(String fecha, String estado, Integer idOperario, Callback<ApiResponse<RutasResponse>> callback) {
+        getApiService().obtenerRutas(fecha, estado, idOperario).enqueue(wrapCallback(callback));
     }
 
     public void obtenerRutasLocales(String fecha, String estado, int idOperario, LocalCallback<List<RutaEntity>> callback) {
@@ -81,11 +97,11 @@ public class RutaRepository {
     }
 
     public void obtenerDetalleRuta(int idRuta, Callback<ApiResponse<RutaEntity>> callback) {
-        apiService.obtenerDetalleRuta(idRuta).enqueue(callback);
+        getApiService().obtenerDetalleRuta(idRuta).enqueue(wrapCallback(callback));
     }
 
-    public void obtenerPuntosRutaRemotos(int idRuta, Callback<ApiResponse<List<PuntoRutaEntity>>> callback) {
-        apiService.obtenerPuntosRuta(idRuta).enqueue(callback);
+    public void obtenerPuntosRutaRemotos(int idRuta, Callback<ApiResponse<PuntosResponse>> callback) {
+        getApiService().obtenerPuntosRuta(idRuta).enqueue(wrapCallback(callback));
     }
 
     public void obtenerPuntosLocales(int idRuta, LocalCallback<List<PuntoRutaEntity>> callback) {
@@ -100,44 +116,52 @@ public class RutaRepository {
     }
 
     public void iniciarRuta(int idRuta, Callback<ApiResponse<RutaEntity>> callback) {
-        apiService.iniciarRuta(idRuta).enqueue(new Callback<ApiResponse<RutaEntity>>() {
+        getApiService().iniciarRuta(idRuta).enqueue(new Callback<ApiResponse<RutaEntity>>() {
             @Override
             public void onResponse(Call<ApiResponse<RutaEntity>> call, Response<ApiResponse<RutaEntity>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
                     executor.execute(() -> rutaDao.actualizarEstado(idRuta, "EN CURSO"));
                 }
-                callback.onResponse(call, response);
+                if (callback != null) {
+                    callback.onResponse(call, response);
+                }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<RutaEntity>> call, Throwable t) {
                 // Operación local en caso de desconexión
                 executor.execute(() -> rutaDao.actualizarEstado(idRuta, "EN CURSO"));
-                callback.onFailure(call, t);
+                if (callback != null) {
+                    callback.onFailure(call, t);
+                }
             }
         });
     }
 
     public void finalizarRuta(int idRuta, Callback<ApiResponse<RutaEntity>> callback) {
-        apiService.finalizarRuta(idRuta).enqueue(new Callback<ApiResponse<RutaEntity>>() {
+        getApiService().finalizarRuta(idRuta).enqueue(new Callback<ApiResponse<RutaEntity>>() {
             @Override
             public void onResponse(Call<ApiResponse<RutaEntity>> call, Response<ApiResponse<RutaEntity>> response) {
                 if (response.isSuccessful()) {
                     executor.execute(() -> rutaDao.actualizarEstado(idRuta, "FINALIZADA"));
                 }
-                callback.onResponse(call, response);
+                if (callback != null) {
+                    callback.onResponse(call, response);
+                }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<RutaEntity>> call, Throwable t) {
-                callback.onFailure(call, t);
+                if (callback != null) {
+                    callback.onFailure(call, t);
+                }
             }
         });
     }
 
     public void asignarRuta(int idRuta, int idOperario, int idVehiculo, Callback<ApiResponse<RutaEntity>> callback) {
         AsignarRutaRequest req = new AsignarRutaRequest(idOperario, idVehiculo);
-        apiService.asignarRuta(idRuta, req).enqueue(callback);
+        getApiService().asignarRuta(idRuta, req).enqueue(wrapCallback(callback));
     }
 
     // --- ATENCIÓN DE PUNTO TRANSACCIONAL (MÓDULO 3 & RETO R1) ---
@@ -155,7 +179,7 @@ public class RutaRepository {
         }
 
         // Intento online
-        apiService.atenderPunto(idRutaPunto, req).enqueue(new Callback<ApiResponse<PuntoRutaEntity>>() {
+        getApiService().atenderPunto(idRutaPunto, req).enqueue(new Callback<ApiResponse<PuntoRutaEntity>>() {
             @Override
             public void onResponse(Call<ApiResponse<PuntoRutaEntity>> call, Response<ApiResponse<PuntoRutaEntity>> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
@@ -167,13 +191,13 @@ public class RutaRepository {
                         int porcentaje = total > 0 ? (atendidos * 100 / total) : 0;
                         rutaDao.actualizarAvance(idRuta, atendidos, porcentaje);
                     });
-                    callback.onSuccess(puntoActualizado, false);
+                    if (callback != null) callback.onSuccess(puntoActualizado, false);
                 } else if (response.code() == 409) {
                     // Idempotencia: el servidor ya lo había atendido
                     executor.execute(() -> puntoRutaDao.marcarAtendido(idRutaPunto, "ATENDIDO", fechaHora, lat, lon, observacion));
-                    callback.onSuccess(null, false);
+                    if (callback != null) callback.onSuccess(null, false);
                 } else {
-                    callback.onError("Error en servidor: " + response.code() + " " + response.message());
+                    if (callback != null) callback.onError("Error en servidor: " + response.code() + " " + response.message());
                 }
             }
 
@@ -209,7 +233,9 @@ public class RutaRepository {
             // Programar WorkManager para cuando regrese la red
             SyncManager.encolarSincronizacion(context);
 
-            callback.onSuccess(puntoRutaDao.obtenerPorId(idRutaPunto), true);
+            if (callback != null) {
+                callback.onSuccess(puntoRutaDao.obtenerPorId(idRutaPunto), true);
+            }
         });
     }
 

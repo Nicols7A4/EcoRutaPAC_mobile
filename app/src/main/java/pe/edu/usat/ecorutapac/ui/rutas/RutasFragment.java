@@ -1,66 +1,121 @@
 package pe.edu.usat.ecorutapac.ui.rutas;
 
+import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import pe.edu.usat.ecorutapac.R;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link RutasFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.List;
+
+import pe.edu.usat.ecorutapac.R;
+import pe.edu.usat.ecorutapac.data.local.entity.RutaEntity;
+import pe.edu.usat.ecorutapac.databinding.FragmentRutasBinding;
+import pe.edu.usat.ecorutapac.ui.common.UiState;
+import pe.edu.usat.ecorutapac.ui.rutas.adapter.RutaAdapter;
+
 public class RutasFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private FragmentRutasBinding binding;
+    private RutasViewModel viewModel;
+    private RutaAdapter adapter;
+    private String estadoFiltroActual = "TODAS";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public RutasFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment RutasFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static RutasFragment newInstance(String param1, String param2) {
-        RutasFragment fragment = new RutasFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        binding = FragmentRutasBinding.inflate(inflater, container, false);
+        return binding.getRoot();
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        viewModel = new ViewModelProvider(this).get(RutasViewModel.class);
+
+        setupRecyclerView();
+        setupFilters();
+        setupObservers();
+
+        binding.swipeRefresh.setOnRefreshListener(() -> viewModel.cargarRutas(null, estadoFiltroActual));
+        binding.btnReintentar.setOnClickListener(v -> viewModel.cargarRutas(null, estadoFiltroActual));
+
+        viewModel.cargarRutas(null, estadoFiltroActual);
+    }
+
+    private void setupRecyclerView() {
+        adapter = new RutaAdapter(ruta -> {
+            Intent intent = new Intent(requireContext(), DetalleRutaActivity.class);
+            intent.putExtra("id_ruta", ruta.getId());
+            startActivity(intent);
+        });
+
+        binding.rvRutas.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvRutas.setAdapter(adapter);
+    }
+
+    private void setupFilters() {
+        binding.chipTodos.setOnClickListener(v -> aplicarFiltro("TODAS"));
+        binding.chipProgramadas.setOnClickListener(v -> aplicarFiltro("PROGRAMADA"));
+        binding.chipEnCurso.setOnClickListener(v -> aplicarFiltro("EN_CURSO"));
+        binding.chipFinalizadas.setOnClickListener(v -> aplicarFiltro("FINALIZADA"));
+        binding.chipObservadas.setOnClickListener(v -> aplicarFiltro("OBSERVADA"));
+    }
+
+    private void aplicarFiltro(String estado) {
+        this.estadoFiltroActual = estado;
+        viewModel.cargarRutas(null, estadoFiltroActual);
+    }
+
+    private void setupObservers() {
+        viewModel.getRutasState().observe(getViewLifecycleOwner(), state -> {
+            if (state == null) return;
+
+            binding.swipeRefresh.setRefreshing(false);
+
+            if (state.getEstado() == UiState.Estado.LOADING) {
+                binding.progressBar.setVisibility(View.VISIBLE);
+                binding.llEmpty.setVisibility(View.GONE);
+                binding.llError.setVisibility(View.GONE);
+            } else if (state.getEstado() == UiState.Estado.CONTENT) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.llEmpty.setVisibility(View.GONE);
+                binding.llError.setVisibility(View.GONE);
+                binding.rvRutas.setVisibility(View.VISIBLE);
+                adapter.setRutas(state.getData());
+            } else if (state.getEstado() == UiState.Estado.EMPTY) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.rvRutas.setVisibility(View.GONE);
+                binding.llError.setVisibility(View.GONE);
+                binding.llEmpty.setVisibility(View.VISIBLE);
+            } else if (state.getEstado() == UiState.Estado.ERROR) {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.rvRutas.setVisibility(View.GONE);
+                binding.llEmpty.setVisibility(View.GONE);
+                binding.llError.setVisibility(View.VISIBLE);
+                binding.tvErrorMessage.setText(state.getMensaje());
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (viewModel != null) {
+            viewModel.cargarRutas(null, estadoFiltroActual);
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_rutas, container, false);
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

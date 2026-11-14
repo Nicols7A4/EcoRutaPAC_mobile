@@ -2,7 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Conectividad y Red -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Geolocalización y Proximidad (Reto R2) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Evidencia Fotografica y Camara (Reto R3) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Notificaciones Push FCM (Reto R4) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
     <application
+        android:name=".EcoRutaApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -10,57 +30,124 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.EcoRutaPAC">
+        android:theme="@style/Theme.EcoRutaPAC"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
+
+        <!-- Servicio de Notificaciones FCM -->
+        <service
+            android:name=".fcm.FCMService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- FileProvider para Camara -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Pantalla de Login (Launcher) -->
         <activity
-            android:name=".ui.main.MainActivity"
+            android:name=".ui.auth.LoginActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Pantalla Principal / Menu de Navegacion por Rol -->
         <activity
-            android:name=".ui.auth.LoginActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:screenOrientation="portrait" />
+
+        <!-- Detalle de Ruta con Deep Link FCM (Reto R4) -->
+        <activity
+            android:name=".ui.rutas.DetalleRutaActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="ecoruta"
+                    android:host="ruta" />
+            </intent-filter>
+        </activity>
+
+        <!-- Atencion de Punto con QR y Validacion Geografica -->
         <activity
             android:name=".ui.atender.AtenderPuntoActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.fiscalizador.ObservacionControlActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.incidencias.ListaIncidenciasActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.incidencias.ReportarIncidenciaActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.mapa.MapaRutaActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.supervisor.AsignarRutaActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.supervisor.ResumenSupervisionActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.rutas.DetalleRutaActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:screenOrientation="portrait" />
+
+        <!-- Escaner QR con Camara -->
         <activity
             android:name=".ui.atender.ScannerQRActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
+            android:screenOrientation="portrait" />
+
+        <!-- Reporte de Incidencias con Foto Multipart -->
+        <activity
+            android:name=".ui.incidencias.ReportarIncidenciaActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="ecoruta"
+                    android:host="incidencia" />
+            </intent-filter>
+        </activity>
+
+        <!-- Listado de Incidencias -->
+        <activity
+            android:name=".ui.incidencias.ListaIncidenciasActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Mapa de la Ruta (Google Maps) -->
+        <activity
+            android:name=".ui.mapa.MapaRutaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Supervisor: Asignar Operario y Vehiculo -->
+        <activity
+            android:name=".ui.supervisor.AsignarRutaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Supervisor: Resumen y KPIs de Operacion -->
+        <activity
+            android:name=".ui.supervisor.ResumenSupervisionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Fiscalizador: Registrar Observacion de Control -->
+        <activity
+            android:name=".ui.fiscalizador.ObservacionControlActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
     </application>
 
 </manifest>
